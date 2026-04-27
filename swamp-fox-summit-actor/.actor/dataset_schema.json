@@ -1,0 +1,84 @@
+{
+  "actorSpecification": 1,
+  "fields": {
+    "type": "object",
+    "properties": {
+      "lead_id": {"type": "string"},
+      "company_name": {"type": "string"},
+      "industry_tag": {"type": "string"},
+      "contact_name": {"type": ["string", "null"]},
+      "contact_first_name": {"type": ["string", "null"]},
+      "contact_last_name": {"type": ["string", "null"]},
+      "contact_title": {"type": ["string", "null"]},
+      "contact_role_tag": {"type": ["string", "null"]},
+      "contact_linkedin_url": {"type": ["string", "null"]},
+      "email": {"type": ["string", "null"]},
+      "email_source": {"type": ["string", "null"]},
+      "alternate_emails": {"type": "array"},
+      "phone": {"type": ["string", "null"]},
+      "alternate_phones": {"type": "array"},
+      "website": {"type": ["string", "null"]},
+      "linkedin_company_url": {"type": ["string", "null"]},
+      "linkedin_employee_count": {"type": ["integer", "null"]},
+      "social_links": {"type": "object"},
+      "address": {"type": ["string", "null"]},
+      "city": {"type": ["string", "null"]},
+      "state": {"type": ["string", "null"]},
+      "zip": {"type": ["string", "null"]},
+      "distance_to_birmingham_km": {"type": ["number", "null"]},
+      "yp_url": {"type": ["string", "null"]},
+      "yp_phone": {"type": ["string", "null"]},
+      "yp_years_in_business": {"type": ["integer", "null"]},
+      "bbb_rating": {"type": ["string", "null"]},
+      "bbb_accredited": {"type": ["boolean", "null"]},
+      "lead_score": {"type": "integer"},
+      "qualification_status": {"type": "string"},
+      "qualification_reasons": {"type": "array"},
+      "producer_assigned": {"type": ["string", "null"]},
+      "scraped_at": {"type": "string"},
+      "first_email_sent_at": {"type": ["string", "null"]},
+      "first_email_opened_at": {"type": ["string", "null"]},
+      "first_email_clicked_at": {"type": ["string", "null"]},
+      "second_email_sent_at": {"type": ["string", "null"]},
+      "second_email_opened_at": {"type": ["string", "null"]},
+      "third_email_sent_at": {"type": ["string", "null"]},
+      "registered_for_summit": {"type": "boolean"},
+      "replied": {"type": "boolean"},
+      "reply_received_at": {"type": ["string", "null"]},
+      "call_booked": {"type": "boolean"},
+      "unsubscribed": {"type": "boolean"},
+      "engagement_status": {"type": "string"},
+      "last_action_at": {"type": "string"}
+    }
+  },
+  "views": {
+    "high_value": {
+      "title": "High-Value Leads (Decision Maker Identified)",
+      "transformation": {
+        "fields": [
+          "company_name", "industry_tag", "contact_name", "contact_title",
+          "city", "state", "lead_score", "engagement_status", "registered_for_summit"
+        ]
+      }
+    },
+    "engagement_metrics": {
+      "title": "Engagement Funnel",
+      "transformation": {
+        "fields": [
+          "company_name", "contact_name",
+          "first_email_sent_at", "first_email_opened_at", "first_email_clicked_at",
+          "replied", "registered_for_summit", "call_booked"
+        ]
+      }
+    },
+    "needs_review": {
+      "title": "Needs Manual Review",
+      "transformation": {
+        "fields": [
+          "company_name", "qualification_status", "qualification_reasons",
+          "email", "email_source", "lead_score"
+        ]
+      }
+    }
+  }
+}
