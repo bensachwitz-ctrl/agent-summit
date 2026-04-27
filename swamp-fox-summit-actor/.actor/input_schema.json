@@ -18,10 +18,10 @@
       ],
       "default": "source_only"
     },
-
     "searchTerms": {
       "title": "Search Terms",
       "type": "array",
+      "description": "Google Maps search queries. Combined with each region city to source leads.",
       "editor": "stringList",
       "default": [
         "logging company",
@@ -39,8 +39,8 @@
     "regions": {
       "title": "Target Regions",
       "type": "array",
+      "description": "Geographic targets with proximity weighting. Birmingham, AL is weighted highest (Summit venue). Each region needs city, state, weight, and radius_km.",
       "editor": "json",
-      "description": "Geographic targets. Birmingham, AL is weighted highest (Summit venue).",
       "default": [
         {"city": "Birmingham", "state": "AL", "weight": 5, "radius_km": 150},
         {"city": "Tuscaloosa", "state": "AL", "weight": 4, "radius_km": 100},
@@ -67,6 +67,7 @@
     "maxLeadsPerQuery": {
       "title": "Max Leads per Query",
       "type": "integer",
+      "description": "Cap on results returned per (search term × region) combo. Controls cost.",
       "default": 25,
       "minimum": 1,
       "maximum": 200
@@ -74,51 +75,52 @@
     "minFleetSignals": {
       "title": "Min Operator Signals to Qualify",
       "type": "integer",
+      "description": "Minimum positive signals (website, phone, email, reviews) required to mark a lead as qualified.",
       "default": 2,
       "minimum": 0,
       "maximum": 4
     },
-
     "enableLinkedIn": {
       "title": "Enable LinkedIn enrichment",
       "type": "boolean",
-      "default": true,
-      "description": "Pull company pages + decision-maker employees (Owner, Fleet Manager, Safety Director, etc.)."
+      "description": "Pull company pages + decision-maker employees (Owner, Fleet Manager, Safety Director, etc.).",
+      "default": true
     },
     "linkedInMaxLeads": {
       "title": "LinkedIn enrichment cap",
       "type": "integer",
-      "default": 100,
-      "description": "Cap on leads sent to LinkedIn enrichment (cost control)."
+      "description": "Cap on leads sent to LinkedIn enrichment (cost control).",
+      "default": 100
     },
     "enableMultiSource": {
       "title": "Enable Yellow Pages + BBB cross-reference",
       "type": "boolean",
+      "description": "Cross-reference leads against Yellow Pages and Better Business Bureau for additional contact data.",
       "default": true
     },
     "enableEmailFinder": {
       "title": "Enable email pattern generation",
       "type": "boolean",
-      "default": true,
-      "description": "When name + domain are known but no email is found, generate the most-likely email pattern with MX validation."
+      "description": "When name + domain are known but no email is found, generate the most-likely email pattern with MX validation.",
+      "default": true
     },
     "enableReplyMonitor": {
       "title": "Enable Gmail IMAP reply monitor",
       "type": "boolean",
-      "default": true,
-      "description": "Polls inbox in metrics_sync + follow_up_only modes — auto-marks replied leads to suppress further follow-ups."
+      "description": "Polls inbox in metrics_sync + follow_up_only modes — auto-marks replied leads to suppress further follow-ups.",
+      "default": true
     },
     "enableReplyAlerts": {
       "title": "Send reply alerts to Ben",
       "type": "boolean",
-      "default": true,
-      "description": "When a lead replies, send a notification email with the full intel brief and reply excerpt."
+      "description": "When a lead replies, send a notification email with the full intel brief and reply excerpt.",
+      "default": true
     },
     "enableEngagementAlerts": {
       "title": "Send alerts on clicks + registrations",
       "type": "boolean",
-      "default": true,
-      "description": "Notification when a lead clicks the registration link or completes registration."
+      "description": "Notification when a lead clicks the registration link or completes registration.",
+      "default": true
     },
     "alertNotifyEmail": {
       "title": "Alert Notification Email",
@@ -127,125 +129,134 @@
       "default": "workbenjaminsachwitz@gmail.com",
       "editor": "textfield"
     },
-
     "senderEmail": {
       "title": "Sender Email",
       "type": "string",
+      "description": "Gmail address sending the outreach.",
       "editor": "textfield",
       "default": "workbenjaminsachwitz@gmail.com"
     },
     "senderName": {
       "title": "Sender Name",
       "type": "string",
+      "description": "Display name in the From header.",
       "editor": "textfield",
       "default": "Ben Sachwitz — Swamp Fox Agency"
     },
     "gmailAppPassword": {
       "title": "Gmail App Password",
       "type": "string",
-      "description": "16-char Gmail App Password (NOT your Gmail login).",
+      "description": "16-char Gmail App Password (NOT your Gmail login). Generate at myaccount.google.com → Security → 2-Step Verification → App passwords.",
       "editor": "textfield",
       "isSecret": true
     },
-
     "summitUrl": {
       "title": "Summit Page URL",
       "type": "string",
+      "description": "Public URL of the Summit page on Swamp Fox website.",
       "default": "https://swampfoxagency.com/the-summit/",
       "editor": "textfield"
     },
     "registrationFormUrl": {
       "title": "Registration Form URL",
       "type": "string",
-      "description": "Direct link to the registration form. If blank, defaults to {summitUrl}#register.",
+      "description": "Direct link to the registration form. If blank, defaults to summitUrl + #register.",
       "default": "https://swampfoxagency.com/the-summit/#register",
       "editor": "textfield"
     },
     "summitDate": {
       "title": "Summit Day 2 Date",
       "type": "string",
+      "description": "ISO format. Day 2 is the main Summit date. Day 1 reception is one day prior.",
       "default": "2026-08-29",
       "editor": "textfield"
     },
     "calendlyUrl": {
       "title": "Booking URL (Calendly/etc.)",
       "type": "string",
+      "description": "Optional. If set, Touch 2 emails offer a 1:1 call link.",
       "default": "",
       "editor": "textfield"
     },
-
     "trackingBaseUrl": {
       "title": "Tracking Server Base URL",
       "type": "string",
-      "description": "Optional override. If blank, the Actor's web server URL is used automatically.",
+      "description": "Optional override. If blank, the Actor's web server URL is used automatically for opens/clicks/unsub tracking.",
       "default": "",
       "editor": "textfield"
     },
     "trackingKeepAliveMinutes": {
       "title": "Keep Tracking Server Alive (min after send)",
       "type": "integer",
-      "default": 10,
-      "description": "Holds the tracking server up after sends to capture immediate opens/clicks."
+      "description": "Holds the tracking server up after sends to capture immediate opens/clicks.",
+      "default": 10
     },
-
     "googleSheetId": {
       "title": "Google Sheet ID",
       "type": "string",
+      "description": "Sheet ID from URL. Leave blank to skip Sheets sync.",
       "default": "",
       "editor": "textfield"
     },
     "googleServiceAccountJson": {
       "title": "Google Service Account JSON",
       "type": "object",
+      "description": "Paste the full service-account JSON. Required if writing to Sheets.",
       "editor": "json",
       "isSecret": true
     },
-
     "fabricEnabled": {
       "title": "Enable Microsoft Fabric Sync",
       "type": "boolean",
+      "description": "Write leads to Microsoft Fabric Lakehouse via Parquet files.",
       "default": true
     },
     "fabricWorkspaceName": {
       "title": "Fabric Workspace Name",
       "type": "string",
+      "description": "Name of the Microsoft Fabric workspace.",
       "default": "SwampFox-Analytics",
       "editor": "textfield"
     },
     "fabricLakehouseName": {
       "title": "Fabric Lakehouse Name",
       "type": "string",
+      "description": "Name of the Lakehouse inside the Fabric workspace.",
       "default": "ClaimsLakehouse",
       "editor": "textfield"
     },
     "fabricTableName": {
       "title": "Fabric Table Name",
       "type": "string",
+      "description": "Target Delta table for lead data.",
       "default": "summit_outreach_leads",
       "editor": "textfield"
     },
     "azureTenantId": {
       "title": "Azure Tenant ID",
       "type": "string",
+      "description": "Azure AD tenant ID for Fabric service principal authentication.",
       "editor": "textfield",
       "isSecret": true
     },
     "azureClientId": {
       "title": "Azure Service Principal Client ID",
       "type": "string",
+      "description": "Service principal application (client) ID with OneLake Data Contributor permission.",
       "editor": "textfield",
       "isSecret": true
     },
     "azureClientSecret": {
       "title": "Azure Service Principal Secret",
       "type": "string",
+      "description": "Service principal client secret value.",
       "editor": "textfield",
       "isSecret": true
     },
-
     "dryRun": {
       "title": "Dry Run (no emails sent)",
       "type": "boolean",
+      "description": "Recommended for first run. Drafts everything but does NOT send emails.",
       "default": true
     }
   },
