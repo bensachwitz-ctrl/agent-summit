@@ -74,7 +74,7 @@ async def source_leads(cfg: dict[str, Any]) -> list[dict[str, Any]]:
         Actor.log.error("Google Maps Actor call returned no run object")
         return []
 
-dataset = await Actor.apify_client.dataset(run.default_dataset_id).list_items()
+    dataset = await Actor.apify_client.dataset(run.default_dataset_id).list_items()
     raw_items = dataset.items
     Actor.log.info(f"Received {len(raw_items)} raw items from Google Maps")
 
