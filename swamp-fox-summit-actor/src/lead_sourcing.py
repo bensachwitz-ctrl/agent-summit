@@ -82,10 +82,44 @@ async def source_leads(cfg: dict[str, Any]) -> list[dict[str, Any]]:
     leads: list[dict[str, Any]] = []
     seen_keys: set[str] = set()
 
+    # Normalize each result to our internal lead schema
+    leads: list[dict[str, Any]] = []
+    seen_keys: set[str] = set()
+
     for item in raw_items:
-        title = (item.get("title") or "").strip()
-        if not title:
+        company = (item.get("title") or "").strip()
+        if not company:
             continue
+            
+        # Prevent duplicates
+        if company in seen_keys:
+            continue
+        seen_keys.add(company)
+
+        # Extract location
+        city = item.get("city", "")
+        state = item.get("state", "")
+        location = f"{city}, {state}".strip(", ")
+        
+        # Capture raw contact info for the snippet
+        website = item.get("website", "")
+        phone = item.get("phoneUnformatted", item.get("phone", ""))
+
+        # BUILD THE LEAD: Keys must exactly match your Google Sheets headers
+        normalized_lead = {
+            "First Name": "",  
+            "Last Name": "",   
+            "Company": company,
+            "Job title": "",   
+            "Location": location,
+            "Email": "",       
+            "Linkedin profile": "",
+            "Outreach status": "Pending",
+            "DOT number": "",  # For commercial auto pre-qualification
+            "Fleet size": "",  # For commercial auto pre-qualification
+            "Personalization snippet": f"Web: {website} | Phone: {phone}"
+        }
+        leads.append(normalized_lead)
 
         website = item.get("website")
         phone = item.get("phone") or item.get("phoneUnformatted")
