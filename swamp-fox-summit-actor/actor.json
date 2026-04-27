@@ -1,0 +1,17 @@
+{
+  "actorSpecification": 1,
+  "name": "swamp-fox-summit-outreach",
+  "title": "Loggers Technology Summit — Lead Generator & Outreach Agent",
+  "description": "Multi-source lead generation for the 4th Annual Loggers Technology Summit. Sources logging/timber/forestry operators across SC, NC, GA, AL, TN, FL, MS, VA, KY weighted toward Birmingham, AL. Sends 3-touch personalized email sequence with open/click/reply tracking.",
+  "version": "1.3",
+  "buildTag": "latest",
+  "meta": {
+    "templateId": "python-start"
+  },
+  "input": "./input_schema.json",
+  "dockerfile": "../Dockerfile",
+  "storages": {
+    "dataset": "./dataset_schema.json"
+  },
+  "categories": ["LEAD_GENERATION", "MARKETING", "BUSINESS"]
+}
