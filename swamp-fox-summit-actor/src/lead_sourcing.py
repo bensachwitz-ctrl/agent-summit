@@ -69,7 +69,7 @@ async def source_leads(cfg: dict[str, Any]) -> list[dict[str, Any]]:
     }
 
     Actor.log.info(f"Calling {GOOGLE_MAPS_ACTOR_ID} ...")
-    run = await Actor.call(GOOGLE_MAPS_ACTOR_ID, run_input=run_input)
+    run = await Actor.call("apify/contact-info-scraper", run_input=contact_input)
     if not run:
         Actor.log.error("Google Maps Actor call returned no run object")
         return []
