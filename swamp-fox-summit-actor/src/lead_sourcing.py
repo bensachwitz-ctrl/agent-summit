@@ -53,7 +53,7 @@ async def source_leads(cfg: dict[str, Any]) -> list[dict[str, Any]]:
     search_strings = []
     for term in search_terms:
         for region in regions:
-            search_strings.append(f"{term} in {region['city']}, {region['state']}")
+            search_strings.append(f"{term} in {region[0]}, {region[1]}")
 
     Actor.log.info(f"Built {len(search_strings)} search queries across {len(regions)} regions")
 
