@@ -51,7 +51,7 @@ class StorageRouter:
         self._fabric_client = None
 
     async def initialize(self) -> None:
-        self.dataset = await Actor.open_dataset(name="summit_leads")
+        self.dataset = await Actor.open_dataset(name="summit-leads")
         self.kv_store = await Actor.open_key_value_store()
         await self._init_sheets()
         if self.fabric_enabled:
