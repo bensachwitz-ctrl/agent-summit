@@ -15,4 +15,3 @@ pyarrow>=17.0.0
 deltalake>=0.20.0
 email-validator>=2.2.0
 phonenumbers>=8.13.0
-EOF
