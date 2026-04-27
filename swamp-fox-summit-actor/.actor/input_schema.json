@@ -1,0 +1,253 @@
+{
+  "title": "Loggers Technology Summit Outreach — Input",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "mode": {
+      "title": "Run Mode",
+      "type": "string",
+      "description": "What this run should do.",
+      "editor": "select",
+      "enum": ["source_only", "source_and_outreach", "outreach_only", "follow_up_only", "metrics_sync"],
+      "enumTitles": [
+        "Source leads only (no email)",
+        "Source + send first-touch emails",
+        "Outreach only (use existing dataset)",
+        "Send scheduled follow-ups (touch 2 + 3)",
+        "Sync metrics + replies"
+      ],
+      "default": "source_only"
+    },
+
+    "searchTerms": {
+      "title": "Search Terms",
+      "type": "array",
+      "editor": "stringList",
+      "default": [
+        "logging company",
+        "logging contractor",
+        "log hauling",
+        "log truck",
+        "timber harvesting",
+        "timber company",
+        "pulpwood hauler",
+        "forestry contractor",
+        "forestry services",
+        "wood products transport"
+      ]
+    },
+    "regions": {
+      "title": "Target Regions",
+      "type": "array",
+      "editor": "json",
+      "description": "Geographic targets. Birmingham, AL is weighted highest (Summit venue).",
+      "default": [
+        {"city": "Birmingham", "state": "AL", "weight": 5, "radius_km": 150},
+        {"city": "Tuscaloosa", "state": "AL", "weight": 4, "radius_km": 100},
+        {"city": "Montgomery", "state": "AL", "weight": 4, "radius_km": 100},
+        {"city": "Huntsville", "state": "AL", "weight": 3, "radius_km": 100},
+        {"city": "Mobile", "state": "AL", "weight": 3, "radius_km": 100},
+        {"city": "Atlanta", "state": "GA", "weight": 3, "radius_km": 120},
+        {"city": "Macon", "state": "GA", "weight": 3, "radius_km": 100},
+        {"city": "Savannah", "state": "GA", "weight": 2, "radius_km": 100},
+        {"city": "Columbia", "state": "SC", "weight": 3, "radius_km": 120},
+        {"city": "Charleston", "state": "SC", "weight": 2, "radius_km": 100},
+        {"city": "Charlotte", "state": "NC", "weight": 2, "radius_km": 100},
+        {"city": "Asheville", "state": "NC", "weight": 2, "radius_km": 100},
+        {"city": "Nashville", "state": "TN", "weight": 2, "radius_km": 100},
+        {"city": "Knoxville", "state": "TN", "weight": 2, "radius_km": 100},
+        {"city": "Jackson", "state": "MS", "weight": 3, "radius_km": 100},
+        {"city": "Hattiesburg", "state": "MS", "weight": 3, "radius_km": 100},
+        {"city": "Tallahassee", "state": "FL", "weight": 2, "radius_km": 100},
+        {"city": "Jacksonville", "state": "FL", "weight": 2, "radius_km": 100},
+        {"city": "Richmond", "state": "VA", "weight": 1, "radius_km": 100},
+        {"city": "Lexington", "state": "KY", "weight": 1, "radius_km": 100}
+      ]
+    },
+    "maxLeadsPerQuery": {
+      "title": "Max Leads per Query",
+      "type": "integer",
+      "default": 25,
+      "minimum": 1,
+      "maximum": 200
+    },
+    "minFleetSignals": {
+      "title": "Min Operator Signals to Qualify",
+      "type": "integer",
+      "default": 2,
+      "minimum": 0,
+      "maximum": 4
+    },
+
+    "enableLinkedIn": {
+      "title": "Enable LinkedIn enrichment",
+      "type": "boolean",
+      "default": true,
+      "description": "Pull company pages + decision-maker employees (Owner, Fleet Manager, Safety Director, etc.)."
+    },
+    "linkedInMaxLeads": {
+      "title": "LinkedIn enrichment cap",
+      "type": "integer",
+      "default": 100,
+      "description": "Cap on leads sent to LinkedIn enrichment (cost control)."
+    },
+    "enableMultiSource": {
+      "title": "Enable Yellow Pages + BBB cross-reference",
+      "type": "boolean",
+      "default": true
+    },
+    "enableEmailFinder": {
+      "title": "Enable email pattern generation",
+      "type": "boolean",
+      "default": true,
+      "description": "When name + domain are known but no email is found, generate the most-likely email pattern with MX validation."
+    },
+    "enableReplyMonitor": {
+      "title": "Enable Gmail IMAP reply monitor",
+      "type": "boolean",
+      "default": true,
+      "description": "Polls inbox in metrics_sync + follow_up_only modes — auto-marks replied leads to suppress further follow-ups."
+    },
+    "enableReplyAlerts": {
+      "title": "Send reply alerts to Ben",
+      "type": "boolean",
+      "default": true,
+      "description": "When a lead replies, send a notification email with the full intel brief and reply excerpt."
+    },
+    "enableEngagementAlerts": {
+      "title": "Send alerts on clicks + registrations",
+      "type": "boolean",
+      "default": true,
+      "description": "Notification when a lead clicks the registration link or completes registration."
+    },
+    "alertNotifyEmail": {
+      "title": "Alert Notification Email",
+      "type": "string",
+      "description": "Email address to receive reply/engagement alerts. Defaults to senderEmail if blank.",
+      "default": "workbenjaminsachwitz@gmail.com",
+      "editor": "textfield"
+    },
+
+    "senderEmail": {
+      "title": "Sender Email",
+      "type": "string",
+      "editor": "textfield",
+      "default": "workbenjaminsachwitz@gmail.com"
+    },
+    "senderName": {
+      "title": "Sender Name",
+      "type": "string",
+      "editor": "textfield",
+      "default": "Ben Sachwitz — Swamp Fox Agency"
+    },
+    "gmailAppPassword": {
+      "title": "Gmail App Password",
+      "type": "string",
+      "description": "16-char Gmail App Password (NOT your Gmail login).",
+      "editor": "textfield",
+      "isSecret": true
+    },
+
+    "summitUrl": {
+      "title": "Summit Page URL",
+      "type": "string",
+      "default": "https://swampfoxagency.com/the-summit/",
+      "editor": "textfield"
+    },
+    "registrationFormUrl": {
+      "title": "Registration Form URL",
+      "type": "string",
+      "description": "Direct link to the registration form. If blank, defaults to {summitUrl}#register.",
+      "default": "https://swampfoxagency.com/the-summit/#register",
+      "editor": "textfield"
+    },
+    "summitDate": {
+      "title": "Summit Day 2 Date",
+      "type": "string",
+      "default": "2026-08-29",
+      "editor": "textfield"
+    },
+    "calendlyUrl": {
+      "title": "Booking URL (Calendly/etc.)",
+      "type": "string",
+      "default": "",
+      "editor": "textfield"
+    },
+
+    "trackingBaseUrl": {
+      "title": "Tracking Server Base URL",
+      "type": "string",
+      "description": "Optional override. If blank, the Actor's web server URL is used automatically.",
+      "default": "",
+      "editor": "textfield"
+    },
+    "trackingKeepAliveMinutes": {
+      "title": "Keep Tracking Server Alive (min after send)",
+      "type": "integer",
+      "default": 10,
+      "description": "Holds the tracking server up after sends to capture immediate opens/clicks."
+    },
+
+    "googleSheetId": {
+      "title": "Google Sheet ID",
+      "type": "string",
+      "default": "",
+      "editor": "textfield"
+    },
+    "googleServiceAccountJson": {
+      "title": "Google Service Account JSON",
+      "type": "object",
+      "editor": "json",
+      "isSecret": true
+    },
+
+    "fabricEnabled": {
+      "title": "Enable Microsoft Fabric Sync",
+      "type": "boolean",
+      "default": true
+    },
+    "fabricWorkspaceName": {
+      "title": "Fabric Workspace Name",
+      "type": "string",
+      "default": "SwampFox-Analytics",
+      "editor": "textfield"
+    },
+    "fabricLakehouseName": {
+      "title": "Fabric Lakehouse Name",
+      "type": "string",
+      "default": "ClaimsLakehouse",
+      "editor": "textfield"
+    },
+    "fabricTableName": {
+      "title": "Fabric Table Name",
+      "type": "string",
+      "default": "summit_outreach_leads",
+      "editor": "textfield"
+    },
+    "azureTenantId": {
+      "title": "Azure Tenant ID",
+      "type": "string",
+      "editor": "textfield",
+      "isSecret": true
+    },
+    "azureClientId": {
+      "title": "Azure Service Principal Client ID",
+      "type": "string",
+      "editor": "textfield",
+      "isSecret": true
+    },
+    "azureClientSecret": {
+      "title": "Azure Service Principal Secret",
+      "type": "string",
+      "editor": "textfield",
+      "isSecret": true
+    },
+
+    "dryRun": {
+      "title": "Dry Run (no emails sent)",
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": ["mode", "senderEmail"]
+}
