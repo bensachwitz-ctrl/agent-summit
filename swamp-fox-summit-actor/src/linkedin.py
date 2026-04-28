@@ -1,7 +1,7 @@
 """LinkedIn enrichment — pulls company pages and decision-maker employees.
 
-Hardened: if LinkedIn Actors aren't accessible, this skips silently
-and the pipeline continues without LinkedIn data.
+Hardened: if LinkedIn Actors aren't accessible, this skips silently.
+Also handles both dict and ActorRun return types from Apify SDK.
 """
 from __future__ import annotations
 
@@ -26,6 +26,19 @@ TITLE_SCORES: list[tuple[re.Pattern, int, str]] = [
 ]
 
 
+def _get_dataset_id(run: Any) -> str | None:
+    """Extract dataset ID from Apify run result (handles dict and ActorRun)."""
+    if run is None:
+        return None
+    for attr in ("default_dataset_id", "defaultDatasetId"):
+        val = getattr(run, attr, None)
+        if val:
+            return val
+    if isinstance(run, dict):
+        return run.get("defaultDatasetId") or run.get("default_dataset_id")
+    return None
+
+
 def _score_title(title: str) -> tuple[int, str]:
     if not title:
         return 0, "unknown"
@@ -42,9 +55,10 @@ async def _find_linkedin_company(company_name: str, location: str | None) -> dic
             "maxItems": 3,
         }
         run = await Actor.call(LINKEDIN_COMPANY_ACTOR, run_input=run_input, timeout_secs=120)
-        if not run:
+        dataset_id = _get_dataset_id(run)
+        if not dataset_id:
             return None
-        items = (await Actor.apify_client.dataset(run["defaultDatasetId"]).list_items()).items
+        items = (await Actor.apify_client.dataset(dataset_id).list_items()).items
         if not items:
             return None
         company_tokens = set(company_name.lower().split())
@@ -74,9 +88,10 @@ async def _scrape_employees(company_url: str, max_employees: int = 25) -> list[d
             ],
         }
         run = await Actor.call(LINKEDIN_EMPLOYEES_ACTOR, run_input=run_input, timeout_secs=180)
-        if not run:
+        dataset_id = _get_dataset_id(run)
+        if not dataset_id:
             return []
-        items = (await Actor.apify_client.dataset(run["defaultDatasetId"]).list_items()).items
+        items = (await Actor.apify_client.dataset(dataset_id).list_items()).items
         return items or []
     except Exception as e:
         Actor.log.debug(f"LinkedIn employees scrape failed for {company_url}: {e}")
@@ -114,7 +129,6 @@ async def enrich_with_linkedin(
         Actor.log.info("LinkedIn enrichment disabled.")
         return leads
 
-    # Test if the Actor is accessible before processing many leads
     Actor.log.info("Testing LinkedIn Actor accessibility...")
     try:
         test_run = await Actor.call(
