@@ -1,8 +1,7 @@
 """Multi-source enrichment — Yellow Pages, BBB, contact scraper.
 
 Hardened: each source can fail independently without crashing the run.
-The Apify contact-info-scraper is optional; only HTTP-based sources
-(Yellow Pages, BBB) are guaranteed.
+Handles both dict and ActorRun return types from Apify SDK.
 """
 from __future__ import annotations
 
@@ -25,6 +24,19 @@ HEADERS = {
 
 EMAIL_REGEX = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
 PHONE_REGEX = re.compile(r"\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}")
+
+
+def _get_dataset_id(run: Any) -> str | None:
+    """Extract dataset ID from Apify run result (handles dict and ActorRun)."""
+    if run is None:
+        return None
+    for attr in ("default_dataset_id", "defaultDatasetId"):
+        val = getattr(run, attr, None)
+        if val:
+            return val
+    if isinstance(run, dict):
+        return run.get("defaultDatasetId") or run.get("default_dataset_id")
+    return None
 
 
 async def _yellow_pages_search(client: httpx.AsyncClient, name: str, location: str) -> dict[str, Any]:
@@ -93,9 +105,10 @@ async def _contact_scraper_actor(websites: list[str]) -> dict[str, dict[str, Any
             },
             timeout_secs=600,
         )
-        if not run:
+        dataset_id = _get_dataset_id(run)
+        if not dataset_id:
             return {}
-        items = (await Actor.apify_client.dataset(run["defaultDatasetId"]).list_items()).items
+        items = (await Actor.apify_client.dataset(dataset_id).list_items()).items
         result: dict[str, dict[str, Any]] = {}
         for item in items:
             domain = urlparse(item.get("url", "")).netloc.lower().lstrip("www.")
