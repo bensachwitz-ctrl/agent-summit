@@ -1,10 +1,8 @@
-"""Multi-source enrichment — cross-references leads against:
-  - Yellow Pages (`vdrmota/contact-info-scraper` or direct scrape)
-  - Better Business Bureau (BBB)
-  - Industry directories (American Loggers Council, Forest Resources Association)
+"""Multi-source enrichment — Yellow Pages, BBB, contact scraper.
 
-Adds: alternative phones, additional emails, business age, BBB rating,
-industry association membership flags.
+Hardened: each source can fail independently without crashing the run.
+The Apify contact-info-scraper is optional; only HTTP-based sources
+(Yellow Pages, BBB) are guaranteed.
 """
 from __future__ import annotations
 
@@ -30,7 +28,6 @@ PHONE_REGEX = re.compile(r"\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}")
 
 
 async def _yellow_pages_search(client: httpx.AsyncClient, name: str, location: str) -> dict[str, Any]:
-    """Search Yellow Pages for a business — returns whatever is publicly visible."""
     url = f"https://www.yellowpages.com/search?search_terms={quote_plus(name)}&geo_location_terms={quote_plus(location)}"
     result: dict[str, Any] = {"yp_url": None, "yp_phone": None, "yp_years_in_business": None}
     try:
@@ -61,7 +58,6 @@ async def _yellow_pages_search(client: httpx.AsyncClient, name: str, location: s
 
 
 async def _bbb_search(client: httpx.AsyncClient, name: str, location: str) -> dict[str, Any]:
-    """Look up BBB rating via search. Best-effort, often blocked — silent on failure."""
     result = {"bbb_rating": None, "bbb_accredited": None, "bbb_url": None}
     try:
         url = f"https://www.bbb.org/search?find_country=USA&find_text={quote_plus(name)}&find_loc={quote_plus(location)}"
@@ -85,7 +81,6 @@ async def _bbb_search(client: httpx.AsyncClient, name: str, location: str) -> di
 
 
 async def _contact_scraper_actor(websites: list[str]) -> dict[str, dict[str, Any]]:
-    """Use Apify's contact-info-scraper for deep extraction across many sites in one Actor call."""
     if not websites:
         return {}
     try:
@@ -119,12 +114,15 @@ async def _contact_scraper_actor(websites: list[str]) -> dict[str, dict[str, Any
                     entry["social"][k] = v if isinstance(v, str) else (v[0] if v else None)
         return result
     except Exception as e:
-        Actor.log.warning(f"Contact-info-scraper failed: {e}")
+        Actor.log.warning(
+            f"Contact-info-scraper unavailable: {e}. "
+            f"Skipping deep contact scrape. To enable, subscribe to "
+            f"'{CONTACT_SCRAPER_ACTOR}' free in Apify Store."
+        )
         return {}
 
 
 async def enrich_multi_source(leads: list[dict[str, Any]], cfg: dict[str, Any]) -> list[dict[str, Any]]:
-    """Cross-reference leads against Yellow Pages, BBB, and Apify contact scraper."""
     if not cfg.get("enableMultiSource", True):
         Actor.log.info("Multi-source enrichment disabled.")
         return leads
@@ -132,7 +130,6 @@ async def enrich_multi_source(leads: list[dict[str, Any]], cfg: dict[str, Any]) 
     semaphore = asyncio.Semaphore(6)
     websites = [l["website"] for l in leads if l.get("website")]
 
-    # Run the heavy Apify contact scraper in parallel with the lighter HTTP lookups
     contact_task = asyncio.create_task(_contact_scraper_actor(websites[:200]))
 
     async with httpx.AsyncClient() as client:
@@ -158,7 +155,6 @@ async def enrich_multi_source(leads: list[dict[str, Any]], cfg: dict[str, Any]) 
         if not deep:
             continue
         matched_contacts += 1
-        # Prefer existing email but accumulate alternates
         all_emails = ([lead["email"]] if lead.get("email") else []) + deep["emails"]
         unique_emails = []
         for e in all_emails:
