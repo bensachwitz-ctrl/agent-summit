@@ -1,8 +1,8 @@
 """Lead sourcing — calls the Apify Google Maps Scraper Actor.
 
-Hardened against Actor unavailability. If `compass/crawler-google-places`
-isn't accessible to your account, the run logs a clear message and exits
-gracefully instead of crashing.
+Hardened against Actor unavailability AND against SDK return-type changes.
+Newer Apify SDK versions return ActorRun objects (attribute access) rather
+than dicts (subscript access), so we handle both cases defensively.
 """
 from __future__ import annotations
 
@@ -35,6 +35,25 @@ def _industry_tag(query: str) -> str:
     if "forestry" in q:
         return "forestry"
     return "trucking"
+
+
+def _get_dataset_id(run: Any) -> str | None:
+    """Extract dataset ID from Apify run result.
+
+    Handles all known return shapes across Apify SDK versions:
+    - dict with 'defaultDatasetId' key (older SDKs)
+    - ActorRun object with .default_dataset_id attribute (newer SDKs)
+    - ActorRun object with .defaultDatasetId attribute (some versions)
+    """
+    if run is None:
+        return None
+    for attr in ("default_dataset_id", "defaultDatasetId"):
+        val = getattr(run, attr, None)
+        if val:
+            return val
+    if isinstance(run, dict):
+        return run.get("defaultDatasetId") or run.get("default_dataset_id")
+    return None
 
 
 async def source_leads(cfg: dict[str, Any]) -> list[dict[str, Any]]:
@@ -78,11 +97,19 @@ async def source_leads(cfg: dict[str, Any]) -> list[dict[str, Any]]:
         Actor.log.error("Google Maps Actor returned no run object")
         return []
 
+    dataset_id = _get_dataset_id(run)
+    if not dataset_id:
+        Actor.log.error(
+            f"Could not extract dataset ID from run object (type={type(run).__name__}). "
+            f"This may indicate an unexpected SDK version."
+        )
+        return []
+
     try:
-        dataset = await Actor.apify_client.dataset(run["defaultDatasetId"]).list_items()
+        dataset = await Actor.apify_client.dataset(dataset_id).list_items()
         raw_items = dataset.items
     except Exception as e:
-        Actor.log.error(f"Failed to read Google Maps dataset: {e}")
+        Actor.log.error(f"Failed to read Google Maps dataset {dataset_id}: {e}")
         return []
 
     Actor.log.info(f"Received {len(raw_items)} raw items from Google Maps")
