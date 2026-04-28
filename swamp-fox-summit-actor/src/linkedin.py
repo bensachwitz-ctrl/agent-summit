@@ -1,15 +1,7 @@
 """LinkedIn enrichment — pulls company pages and decision-maker employees.
 
-Strategy:
-  1. For each lead with a company name, search LinkedIn for the company page
-     using `harvestapi/linkedin-company` (no login required for public data).
-  2. From the company URL, pull employees filtered by relevant titles using
-     `harvestapi/linkedin-company-employees`.
-  3. Score employees by title fit and merge top decision maker into the lead.
-
-Decision maker priority for logging/forestry operations:
-  Owner / President / CEO > VP Operations > Fleet Manager > Safety Director
-  > Operations Manager > General Manager > Risk Manager
+Hardened: if LinkedIn Actors aren't accessible, this skips silently
+and the pipeline continues without LinkedIn data.
 """
 from __future__ import annotations
 
@@ -21,7 +13,6 @@ from apify import Actor
 LINKEDIN_COMPANY_ACTOR = "harvestapi/linkedin-company"
 LINKEDIN_EMPLOYEES_ACTOR = "harvestapi/linkedin-company-employees"
 
-# Title scoring — higher = better fit for Summit invite (decision authority)
 TITLE_SCORES: list[tuple[re.Pattern, int, str]] = [
     (re.compile(r"\b(owner|founder|president|ceo|principal)\b", re.I), 100, "owner"),
     (re.compile(r"\b(vp|vice president).*\b(operation|fleet|safety|risk)", re.I), 85, "vp_ops"),
@@ -36,7 +27,6 @@ TITLE_SCORES: list[tuple[re.Pattern, int, str]] = [
 
 
 def _score_title(title: str) -> tuple[int, str]:
-    """Return (score, role_tag) for a job title."""
     if not title:
         return 0, "unknown"
     for pattern, score, tag in TITLE_SCORES:
@@ -46,7 +36,6 @@ def _score_title(title: str) -> tuple[int, str]:
 
 
 async def _find_linkedin_company(company_name: str, location: str | None) -> dict[str, Any] | None:
-    """Search LinkedIn for a company page, return the best match."""
     try:
         run_input = {
             "queries": [f"{company_name} {location}" if location else company_name],
@@ -58,7 +47,6 @@ async def _find_linkedin_company(company_name: str, location: str | None) -> dic
         items = (await Actor.apify_client.dataset(run["defaultDatasetId"]).list_items()).items
         if not items:
             return None
-        # Pick best match — prefer name token overlap
         company_tokens = set(company_name.lower().split())
         best = None
         best_score = -1
@@ -75,12 +63,10 @@ async def _find_linkedin_company(company_name: str, location: str | None) -> dic
 
 
 async def _scrape_employees(company_url: str, max_employees: int = 25) -> list[dict[str, Any]]:
-    """Pull employees from a LinkedIn company page."""
     try:
         run_input = {
             "companyUrls": [company_url],
             "maxItems": max_employees,
-            # Filter for relevant titles to reduce cost
             "currentJobTitles": [
                 "owner", "president", "ceo", "vice president", "vp",
                 "fleet manager", "safety director", "operations manager",
@@ -98,7 +84,6 @@ async def _scrape_employees(company_url: str, max_employees: int = 25) -> list[d
 
 
 def _pick_best_decision_maker(employees: list[dict[str, Any]]) -> dict[str, Any] | None:
-    """From a list of employees, return the one with the highest title score."""
     scored = []
     for emp in employees:
         title = emp.get("currentJobTitle") or emp.get("headline") or ""
@@ -124,14 +109,30 @@ async def enrich_with_linkedin(
     leads: list[dict[str, Any]],
     cfg: dict[str, Any],
 ) -> list[dict[str, Any]]:
-    """Mutate leads in place — add LinkedIn company URL + best decision maker."""
     enabled = cfg.get("enableLinkedIn", True)
     if not enabled:
         Actor.log.info("LinkedIn enrichment disabled.")
         return leads
 
+    # Test if the Actor is accessible before processing many leads
+    Actor.log.info("Testing LinkedIn Actor accessibility...")
+    try:
+        test_run = await Actor.call(
+            LINKEDIN_COMPANY_ACTOR,
+            run_input={"queries": ["test"], "maxItems": 1},
+            timeout_secs=60,
+        )
+        if not test_run:
+            raise Exception("No run object returned")
+    except Exception as e:
+        Actor.log.warning(
+            f"LinkedIn Actor not accessible: {e}. "
+            f"Skipping LinkedIn enrichment. To enable, subscribe to "
+            f"'{LINKEDIN_COMPANY_ACTOR}' and '{LINKEDIN_EMPLOYEES_ACTOR}' in Apify Store."
+        )
+        return leads
+
     max_to_enrich = int(cfg.get("linkedInMaxLeads", 100))
-    # Only enrich top-scoring leads to control cost
     candidates = [
         l for l in leads
         if not l.get("contact_name") and l.get("company_name")
